@@ -84,6 +84,7 @@ class LanguagePack::Ruby < LanguagePack::Base
       # check for new app at the beginning of the compile
       new_app?
       Dir.chdir(build_path)
+      write_ssh_key
       remove_vendor_bundle
       install_ruby
       install_jvm
@@ -476,6 +477,21 @@ WARNING
     "vendor/bundle/bin"
   end
 
+  def write_ssh_key
+    return unless key = ENV['SSH_KEY']
+    FileUtils.mkdir_p File.expand_path('~/.ssh')
+    File.open(File.expand_path('~/.ssh/id_rsa'), 'w') do |f|
+      f.write key
+    end
+    File.open(File.expand_path('~/.ssh/shim'), 'w') do |f|
+      f.write <<EOF
+#!/bin/sh
+exec /usr/bin/ssh -o StrictHostKeyChecking=no -i "$HOME/.ssh/id_rsa" "$@"
+EOF
+      f.chmod(0700)
+    end
+  end
+
   # runs bundler to install the dependencies
   def build_bundler
     instrument 'ruby.build_bundler' do
@@ -483,6 +499,7 @@ WARNING
         bundle_without = env("BUNDLE_WITHOUT") || "development:test"
         bundle_bin     = "bundle"
         bundle_command = "#{bundle_bin} install --without #{bundle_without} --path vendor/bundle --binstubs #{bundler_binstubs_path}"
+        bundle_command = 'GIT_SSH="$HOME/.ssh/shim" ' + bundle_command if ENV['SSH_KEY']
         bundle_command << " -j4"
 
         if bundler.windows_gemfile_lock?
