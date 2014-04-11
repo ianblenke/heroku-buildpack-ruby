@@ -478,7 +478,7 @@ WARNING
   end
 
   def write_ssh_key
-    return unless key = ENV['SSH_KEY']
+    return unless key = env('SSH_KEY')
     FileUtils.mkdir_p File.expand_path('~/.ssh')
     File.open(File.expand_path('~/.ssh/id_rsa'), 'w') do |f|
       f.write key
@@ -499,7 +499,7 @@ EOF
         bundle_without = env("BUNDLE_WITHOUT") || "development:test"
         bundle_bin     = "bundle"
         bundle_command = "#{bundle_bin} install --without #{bundle_without} --path vendor/bundle --binstubs #{bundler_binstubs_path}"
-        bundle_command = 'GIT_SSH="$HOME/.ssh/shim" ' + bundle_command if ENV['SSH_KEY']
+        bundle_command = 'GIT_SSH="$HOME/.ssh/shim" ' + bundle_command if env('SSH_KEY')
         bundle_command << " -j4"
 
         if bundler.windows_gemfile_lock?
