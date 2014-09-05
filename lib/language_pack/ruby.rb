@@ -482,6 +482,7 @@ WARNING
     FileUtils.mkdir_p File.expand_path('~/.ssh')
     File.open(File.expand_path('~/.ssh/id_rsa'), 'w') do |f|
       f.write key
+      f.chmod(0600)
     end
     File.open(File.expand_path('~/.ssh/shim'), 'w') do |f|
       f.write <<EOF
